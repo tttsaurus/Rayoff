@@ -1,7 +1,7 @@
 {
   "required": true,
-  "package": "com.example.modid.mixin.mod",
-  "plugin": "com.example.modid.ModMixinConfigPlugin",
+  "package": "com.tttsaurus.rayoff.mixin",
+  "plugin": "com.tttsaurus.rayoff.ModMixinConfigPlugin",
   "compatibilityLevel": "JAVA_8",
   "target": "@env(MOD)",
   "client": [
