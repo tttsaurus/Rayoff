@@ -2,7 +2,7 @@ package com.tttsaurus.rayoff.impl.mixin.common.entity;
 
 import com.tttsaurus.rayoff.api.EntityPhysicsElement;
 import com.tttsaurus.rayoff.api.PhysicsElement;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.phys.Vec3;

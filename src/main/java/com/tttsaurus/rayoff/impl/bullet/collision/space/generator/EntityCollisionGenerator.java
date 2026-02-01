@@ -3,7 +3,7 @@ package com.tttsaurus.rayoff.impl.bullet.collision.space.generator;
 import com.jme3.math.Vector3f;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.EntityRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 
 /**
  * Mods should implement it on their own, with will allow for better performance
@@ -22,7 +22,7 @@ public class EntityCollisionGenerator {
             final var vanillaBox = rigidBody.getCurrentMinecraftBoundingBox();
 
             for (var entity : space.getWorkerThread().getEntitySupplier().getInsideOf(rigidBody, vanillaBox)) {
-                final var entityPos = Convert.toBullet(entity.position().add(0, entity.getBoundingBox().getYsize(), 0));
+                final var entityPos = Convert.toBulletAABB(entity.position().add(0, entity.getBoundingBox().getYsize(), 0));
                 final var normal = location.subtract(entityPos).multLocal(new Vector3f(1, 0, 1)).normalize();
 
                 final var intersection = entity.getBoundingBox().intersect(vanillaBox);

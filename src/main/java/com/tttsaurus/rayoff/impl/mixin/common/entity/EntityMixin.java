@@ -3,7 +3,7 @@ package com.tttsaurus.rayoff.impl.mixin.common.entity;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.tttsaurus.rayoff.api.EntityPhysicsElement;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import dev.lazurite.toolbox.api.math.QuaternionHelper;
 import dev.lazurite.toolbox.api.math.VectorHelper;
 import net.minecraft.nbt.CompoundTag;
@@ -37,9 +37,9 @@ public abstract class EntityMixin {
     public void saveWithoutId(CompoundTag tag, CallbackInfoReturnable<CompoundTag> info) {
         if (EntityPhysicsElement.is((Entity) (Object) this)) {
             var rigidBody = EntityPhysicsElement.get((Entity) (Object) this).getRigidBody();
-            tag.put("orientation", QuaternionHelper.toTag(Convert.toMinecraft(rigidBody.getPhysicsRotation(new Quaternion()))));
-            tag.put("linearVelocity", VectorHelper.toTag(Convert.toMinecraft(rigidBody.getLinearVelocity(new Vector3f()))));
-            tag.put("angularVelocity", VectorHelper.toTag(Convert.toMinecraft(rigidBody.getAngularVelocity(new Vector3f()))));
+            tag.put("orientation", QuaternionHelper.toTag(Convert.toJomlQuat(rigidBody.getPhysicsRotation(new Quaternion()))));
+            tag.put("linearVelocity", VectorHelper.toTag(Convert.toJomlVec3(rigidBody.getLinearVelocity(new Vector3f()))));
+            tag.put("angularVelocity", VectorHelper.toTag(Convert.toJomlVec3(rigidBody.getAngularVelocity(new Vector3f()))));
             tag.putFloat("mass", rigidBody.getMass());
             tag.putFloat("dragCoefficient", rigidBody.getDragCoefficient());
             tag.putFloat("friction", rigidBody.getFriction());

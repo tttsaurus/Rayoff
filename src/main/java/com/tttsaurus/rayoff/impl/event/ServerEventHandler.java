@@ -12,7 +12,7 @@ import com.tttsaurus.rayoff.impl.bullet.collision.body.EntityRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.generator.EntityCollisionGenerator;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.storage.SpaceStorage;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.level.ServerLevelSupplier;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import com.tttsaurus.rayoff.impl.bullet.thread.PhysicsThread;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
 import com.tttsaurus.rayoff.impl.bullet.thread.util.ClientUtil;

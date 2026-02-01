@@ -3,7 +3,7 @@ package com.tttsaurus.rayoff.impl.util;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.tttsaurus.rayoff.api.PhysicsElement;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import dev.lazurite.toolbox.api.math.QuaternionHelper;
 import dev.lazurite.toolbox.api.math.VectorHelper;
 
@@ -42,15 +42,15 @@ public class Frame {
     }
 
     public Vector3f getLocation(Vector3f store, float tickDelta) {
-        var prevLocation = Convert.toMinecraft(this.prevLocation);
-        var tickLocation = Convert.toMinecraft(this.tickLocation);
+        var prevLocation = Convert.toJomlVec3(this.prevLocation);
+        var tickLocation = Convert.toJomlVec3(this.tickLocation);
         var lerp = VectorHelper.lerp(prevLocation, tickLocation, tickDelta);
         return store.set(Convert.toBullet(lerp));
     }
 
     public Quaternion getRotation(Quaternion store, float tickDelta) {
-        var prevRotation = Convert.toMinecraft(this.prevRotation);
-        var tickRotation= Convert.toMinecraft(this.tickRotation);
+        var prevRotation = Convert.toJomlQuat(this.prevRotation);
+        var tickRotation= Convert.toJomlQuat(this.tickRotation);
         var slerp = QuaternionHelper.slerp(prevRotation, tickRotation, tickDelta);
         return store.set(Convert.toBullet(slerp));
     }
@@ -61,8 +61,8 @@ public class Frame {
     }
 
     public Vector3f getRotationDelta(Vector3f store) {
-        final var tickRotation = Convert.toMinecraft(this.tickRotation);
-        final var prevRotation = Convert.toMinecraft(this.prevRotation);
+        final var tickRotation = Convert.toJomlQuat(this.tickRotation);
+        final var prevRotation = Convert.toJomlQuat(this.prevRotation);
         final var tickAngles = QuaternionHelper.toEulerAngles(tickRotation);
         final var prevAngles = QuaternionHelper.toEulerAngles(prevRotation);
         tickAngles.sub(prevAngles);

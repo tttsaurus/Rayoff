@@ -1,11 +1,10 @@
 package com.tttsaurus.rayoff.impl.bullet.collision.space.generator;
 
-import com.jme3.bounding.BoundingBox;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.ElementRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.TerrainRigidBody;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.Block;
+import com.tttsaurus.rayoff.toolbox.api.math.AABBUtils;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.HashSet;
 
@@ -23,7 +22,7 @@ public class TerrainGenerator {
                 continue;
             }
 
-            final var aabb = rigidBody.getCurrentMinecraftBoundingBox().inflate(0.5f);
+            final var aabb = AABBUtils.inflate(rigidBody.getCurrentMinecraftBoundingBox(), 0.5f);
 
             BlockPos.betweenClosedStream(aabb).forEach(blockPos -> {
                 chunkCache.getBlockData(blockPos).ifPresent(blockData -> {

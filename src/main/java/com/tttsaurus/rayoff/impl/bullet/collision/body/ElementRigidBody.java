@@ -3,22 +3,36 @@ package com.tttsaurus.rayoff.impl.bullet.collision.body;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.Quaternion;
 import com.tttsaurus.rayoff.api.PhysicsElement;
+import com.tttsaurus.rayoff.toolbox.api.math.AABBUtils;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.shape.MinecraftShape;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import com.tttsaurus.rayoff.impl.bullet.thread.util.Clock;
 import com.tttsaurus.rayoff.impl.util.Frame;
 import com.jme3.math.Vector3f;
-import dev.lazurite.toolbox.api.math.QuaternionHelper;
-import dev.lazurite.toolbox.api.math.VectorHelper;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 
 import java.security.InvalidParameterException;
 
 public abstract class ElementRigidBody extends MinecraftRigidBody {
+
+    public enum BuoyancyType {
+        NONE,
+        AIR,
+        WATER,
+        ALL
+    }
+
+    public enum DragType {
+        NONE,
+        AIR,
+        WATER,
+        SIMPLE,
+        ALL
+    }
+
     public static final float SLEEP_TIME_IN_SECONDS = 2.0f;
 
     protected final PhysicsElement element;
@@ -30,7 +44,7 @@ public abstract class ElementRigidBody extends MinecraftRigidBody {
     private BuoyancyType buoyancyType;
     private DragType dragType;
     private BoundingBox currentBoundingBox = new BoundingBox();
-    private AABB currentMinecraftBoundingBox = new AABB(0, 0, 0, 0, 0 ,0);
+    private AxisAlignedBB currentMinecraftBoundingBox = new AxisAlignedBB(0, 0, 0, 0, 0 ,0);
 
     public ElementRigidBody(PhysicsElement element, MinecraftSpace space, MinecraftShape shape, float mass, float dragCoefficient, float friction, float restitution) {
         super(space, shape, mass);
@@ -55,15 +69,15 @@ public abstract class ElementRigidBody extends MinecraftRigidBody {
         return this.element;
     }
 
-    public void readTagInfo(CompoundTag tag) {
-        if (tag.contains("orientation")) {
-            this.setPhysicsRotation(Convert.toBullet(QuaternionHelper.fromTag(tag.getCompound("orientation"))));
+    public void readTagInfo(NBTTagCompound tag) {
+        if (tag.hasKey("orientation")) {
+            this.setPhysicsRotation(Convert.fromTagBulletQuat(tag.getCompoundTag("orientation")));
         }
-        if (tag.contains("linearVelocity")) {
-            this.setLinearVelocity(Convert.toBullet(VectorHelper.fromTag(tag.getCompound("linearVelocity"))));
+        if (tag.hasKey("linearVelocity")) {
+            this.setLinearVelocity(Convert.fromTagBulletVec3(tag.getCompoundTag("linearVelocity")));
         }
-        if (tag.contains("angularVelocity")) {
-            this.setAngularVelocity(Convert.toBullet(VectorHelper.fromTag(tag.getCompound("angularVelocity"))));
+        if (tag.hasKey("angularVelocity")) {
+            this.setAngularVelocity(Convert.fromTagBulletVec3(tag.getCompoundTag("angularVelocity")));
         }
 //        this.setMass(tag.getFloat("mass"));
 //        this.setDragCoefficient(tag.getFloat("dragCoefficient"));
@@ -124,11 +138,7 @@ public abstract class ElementRigidBody extends MinecraftRigidBody {
     }
 
     public boolean isNear(BlockPos blockPos) {
-        return this.currentMinecraftBoundingBox.intersects(new AABB(blockPos).inflate(0.5f));
-    }
-
-    public boolean isNear(SectionPos blockPos) {
-        return this.currentMinecraftBoundingBox.intersects(new AABB(blockPos.center()).inflate(8.5f));
+        return this.currentMinecraftBoundingBox.intersects(AABBUtils.inflate(new AxisAlignedBB(blockPos), 0.5f));
     }
 
     public boolean isWaterBuoyancyEnabled() {
@@ -150,30 +160,14 @@ public abstract class ElementRigidBody extends MinecraftRigidBody {
 
     public void updateBoundingBox() {
         this.currentBoundingBox = this.boundingBox(this.currentBoundingBox);
-        this.currentMinecraftBoundingBox = Convert.toMinecraft(this.currentBoundingBox);
+        this.currentMinecraftBoundingBox = Convert.toMcAABB(this.currentBoundingBox);
     }
 
-    public AABB getCurrentMinecraftBoundingBox() {
+    public AxisAlignedBB getCurrentMinecraftBoundingBox() {
         return currentMinecraftBoundingBox;
     }
 
     public BoundingBox getCurrentBoundingBox() {
         return currentBoundingBox;
-    }
-
-
-    public enum BuoyancyType {
-        NONE,
-        AIR,
-        WATER,
-        ALL
-    }
-
-    public enum DragType {
-        NONE,
-        AIR,
-        WATER,
-        SIMPLE,
-        ALL
     }
 }

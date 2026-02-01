@@ -8,9 +8,8 @@ import com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.level.LevelSupp
 import com.tttsaurus.rayoff.impl.bullet.thread.util.ClientUtil;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.thread.ReentrantBlockableEventLoop;
-import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.world.World;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
 import java.util.Queue;
@@ -18,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 
 /**
- * In order to access an instance of this, all you need is a {@link Level} or {@link ReentrantBlockableEventLoop} object.
+ * In order to access an instance of this, all you need is a {@link net.minecraft.world.World} or {@link ReentrantBlockableEventLoop} object.
  * Calling {@link PhysicsThread#execute} adds a runnable to the queue of tasks and is the main way to execute code on
  * this thread. You can also execute code here by using {@link PhysicsSpaceEvents}.
  * @see PhysicsSpaceEvents
@@ -43,8 +42,8 @@ public class PhysicsThread extends Thread implements Executor {
         return Rayon.getThread(!(executor instanceof MinecraftServer));
     }
 
-    public static PhysicsThread get(Level level) {
-        return MinecraftSpace.get(level).getWorkerThread();
+    public static PhysicsThread get(World world) {
+        return MinecraftSpace.get(world).getWorkerThread();
     }
 
     public PhysicsThread(Executor parentExecutor, Thread parentThread, LevelSupplier levelSupplier, EntitySupplier entitySupplier, String name) {
@@ -81,16 +80,18 @@ public class PhysicsThread extends Thread implements Executor {
     /**
      * For queueing up tasks to be executed on this thread. A {@link MinecraftSpace}
      * object is provided within the consumer.
+     *
      * @param task the task to run
      */
     @Override
-    public void execute(@NotNull Runnable task) {
+    public void execute(@NonNull Runnable task) {
         tasks.add(task);
     }
 
     /**
      * Gets the {@link LevelSupplier}. For servers, it is able to provide multiple worlds.
      * For clients, it will only provide one unless immersive portals is installed.
+     *
      * @return the {@link LevelSupplier}
      */
     public LevelSupplier getLevelSupplier() {
@@ -108,6 +109,7 @@ public class PhysicsThread extends Thread implements Executor {
      * Gets the parent executor. Useful for returning to the main thread,
      * especially server-side where {@link MinecraftServer} isn't always readily
      * available.
+     *
      * @return the original {@link Executor} object
      */
     public Executor getParentExecutor() {
@@ -117,8 +119,9 @@ public class PhysicsThread extends Thread implements Executor {
     /**
      * Gets the parent thread. This is useful for checking
      * whether a method is executing on this thread.
-     * @see EntitySupplier
+     *
      * @return the parent {@link Thread} object
+     * @see EntitySupplier
      */
     public Thread getParentThread() {
         return this.parentThread;

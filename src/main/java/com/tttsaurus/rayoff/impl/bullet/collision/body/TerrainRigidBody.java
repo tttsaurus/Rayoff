@@ -5,12 +5,12 @@ import com.tttsaurus.rayoff.impl.bullet.collision.body.shape.MinecraftShape;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.block.BlockProperty;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.cache.ChunkCache;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.util.math.BlockPos;
 
 public class TerrainRigidBody extends MinecraftRigidBody {
     private final BlockPos blockPos;
-    private final BlockState state;
+    private final IBlockState state;
 
     public static TerrainRigidBody from(ChunkCache.BlockData blockData) {
         final var blockProperty = BlockProperty.getBlockProperty(blockData.blockState().getBlock());
@@ -19,7 +19,7 @@ public class TerrainRigidBody extends MinecraftRigidBody {
         return new TerrainRigidBody(MinecraftSpace.get(blockData.level()), blockData.shape(), blockData.blockPos(), blockData.blockState(), friction, restitution);
     }
 
-    public TerrainRigidBody(MinecraftSpace space, MinecraftShape shape, BlockPos blockPos, BlockState blockState, float friction, float restitution) {
+    public TerrainRigidBody(MinecraftSpace space, MinecraftShape shape, BlockPos blockPos, IBlockState blockState, float friction, float restitution) {
         super(space, shape);
         this.blockPos = blockPos;
         this.state = blockState;
@@ -33,7 +33,7 @@ public class TerrainRigidBody extends MinecraftRigidBody {
         return this.blockPos;
     }
 
-    public BlockState getBlockState() {
+    public IBlockState getBlockState() {
         return this.state;
     }
 

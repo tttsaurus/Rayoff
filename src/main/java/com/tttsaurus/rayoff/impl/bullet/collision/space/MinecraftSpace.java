@@ -17,10 +17,9 @@ import com.tttsaurus.rayoff.impl.bullet.collision.body.ElementRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.TerrainRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.generator.TerrainGenerator;
 import com.tttsaurus.rayoff.impl.event.network.EntityNetworking;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -41,7 +40,7 @@ public class MinecraftSpace extends PhysicsSpace implements PhysicsCollisionList
     private final CompletableFuture[] futures = new CompletableFuture[3];
     private final Map<BlockPos, TerrainRigidBody> terrainMap;
     private final PhysicsThread thread;
-    private final Level level;
+    private final World world;
     private final ChunkCache chunkCache;
 
     private volatile boolean stepping;
@@ -49,19 +48,19 @@ public class MinecraftSpace extends PhysicsSpace implements PhysicsCollisionList
 
     /**
      * Allows users to retrieve the {@link MinecraftSpace} associated
-     * with any given {@link Level} object (client or server).
+     * with any given {@link World} object (client or server).
      * @param level the level to get the physics space from
      * @return the {@link MinecraftSpace}
      */
-    public static MinecraftSpace get(Level level) {
+    public static MinecraftSpace get(World level) {
         return ((SpaceStorage) level).getSpace();
     }
 
-    public static Optional<MinecraftSpace> getOptional(Level level) {
-        return Optional.ofNullable(get(level));
+    public static Optional<MinecraftSpace> getOptional(World world) {
+        return Optional.ofNullable(get(world));
     }
 
-    public MinecraftSpace(PhysicsThread thread, Level level) {
+    public MinecraftSpace(PhysicsThread thread, World world) {
         super(
 //                new Vector3f(-Level.MAX_LEVEL_SIZE, Level.MIN_ENTITY_SPAWN_Y, -Level.MAX_LEVEL_SIZE),
 //                new Vector3f(Level.MAX_LEVEL_SIZE, Level.MAX_ENTITY_SPAWN_Y, Level.MAX_LEVEL_SIZE),
@@ -70,7 +69,7 @@ public class MinecraftSpace extends PhysicsSpace implements PhysicsCollisionList
         );
 
         this.thread = thread;
-        this.level = level;
+        this.world = world;
         this.previousBlockUpdates = new HashSet<>();
         this.chunkCache = ChunkCache.create(this);
         this.terrainMap = new ConcurrentHashMap<>();
@@ -95,7 +94,7 @@ public class MinecraftSpace extends PhysicsSpace implements PhysicsCollisionList
      * @see PhysicsSpaceEvents
      */
     public void step() {
-        MinecraftSpace.get(level).getRigidBodiesByClass(ElementRigidBody.class).forEach(ElementRigidBody::updateFrame);
+        MinecraftSpace.get(world).getRigidBodiesByClass(ElementRigidBody.class).forEach(ElementRigidBody::updateFrame);
 
         if (!isStepping() && !isEmpty()) {
             this.stepping = true;
@@ -232,8 +231,8 @@ public class MinecraftSpace extends PhysicsSpace implements PhysicsCollisionList
         return this.thread;
     }
 
-    public Level getLevel() {
-        return this.level;
+    public World getWorld() {
+        return this.world;
     }
 
     public ChunkCache getChunkCache() {

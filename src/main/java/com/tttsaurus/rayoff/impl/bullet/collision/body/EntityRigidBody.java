@@ -4,10 +4,10 @@ import com.jme3.math.Vector3f;
 import com.tttsaurus.rayoff.api.EntityPhysicsElement;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.shape.MinecraftShape;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.EntityPlayer;
 
 public class EntityRigidBody extends ElementRigidBody {
-    private Player priorityPlayer;
+    private EntityPlayer priorityPlayer;
     private boolean dirtyProperties = true;
 
     public EntityRigidBody(EntityPhysicsElement element, MinecraftSpace space, MinecraftShape shape, float mass, float dragCoefficient, float friction, float restitution) {
@@ -23,7 +23,7 @@ public class EntityRigidBody extends ElementRigidBody {
      * @param element the element to base this body around
      */
     public EntityRigidBody(EntityPhysicsElement element) {
-        this(element, MinecraftSpace.get(element.cast().level), element.createShape());
+        this(element, MinecraftSpace.get(element.cast().world), element.createShape());
     }
 
     @Override
@@ -31,7 +31,7 @@ public class EntityRigidBody extends ElementRigidBody {
         return (EntityPhysicsElement) super.getElement();
     }
 
-    public Player getPriorityPlayer() {
+    public EntityPlayer getPriorityPlayer() {
         return this.priorityPlayer;
     }
 
@@ -49,7 +49,7 @@ public class EntityRigidBody extends ElementRigidBody {
         this.dirtyProperties = dirtyProperties;
     }
 
-    public void prioritize(Player priorityPlayer) {
+    public void prioritize(EntityPlayer priorityPlayer) {
         this.priorityPlayer = priorityPlayer;
         this.dirtyProperties = true;
     }

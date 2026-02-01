@@ -6,8 +6,8 @@ import com.jme3.math.Vector3f;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.shape.Triangle;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.ElementRigidBody;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
-import net.minecraft.core.BlockPos;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,7 +87,7 @@ public class PressureGenerator {
                         (int) (location.z + centroid.z)
                 );
 
-                final var posRelativeToBlockCenter = new Vector3f(centroid).add(location).subtract(Convert.toBullet(blockPos));
+                final var posRelativeToBlockCenter = new Vector3f(centroid).add(location).subtract(Convert.toBulletVec3(blockPos));
 
                 chunkCache.getFluidColumn(blockPos).ifPresent(fluidColumn -> {
                     final var waterHeight = fluidColumn.getTop().blockPos().getY() + fluidColumn.getTopHeight(posRelativeToBlockCenter) - location.y - centroid.y;
@@ -112,7 +112,7 @@ public class PressureGenerator {
                 );
 
                 if (submergedTriangles.contains(triangle)) {
-                    final var posRelativeToBlockCenter = new Vector3f(centroid).add(location).subtract(Convert.toBullet(blockPos));
+                    final var posRelativeToBlockCenter = new Vector3f(centroid).add(location).subtract(Convert.toBulletVec3(blockPos));
 
                     final var waterHeight = chunkCache.getFluidColumn(blockPos)
                             .map(fluidColumn -> (float) fluidColumn.getTop().blockPos().getY() + fluidColumn.getTopHeight(posRelativeToBlockCenter) - location.y - centroid.y).orElse(0.0f);

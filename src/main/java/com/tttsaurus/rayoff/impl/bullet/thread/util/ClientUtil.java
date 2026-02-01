@@ -1,24 +1,24 @@
 package com.tttsaurus.rayoff.impl.bullet.thread.util;
 
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
 
 public class ClientUtil {
-    @ExpectPlatform
     public static boolean isClient() {
-        throw new AssertionError();
+        return FMLCommonHandler.instance().getSide() == Side.CLIENT;
     }
 
     public static boolean isPaused() {
         if (isClient()) {
-            return Minecraft.getInstance().isPaused();
+            return Minecraft.getMinecraft().isGamePaused();
         }
         return false;
     }
 
     public static boolean isConnectedToServer() {
         if (isClient()) {
-            return Minecraft.getInstance().getConnection() != null;
+            return Minecraft.getMinecraft().getConnection() != null;
         }
         return false;
     }

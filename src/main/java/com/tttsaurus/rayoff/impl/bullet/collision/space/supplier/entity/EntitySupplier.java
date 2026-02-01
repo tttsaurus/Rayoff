@@ -2,36 +2,36 @@ package com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.entity;
 
 import com.tttsaurus.rayoff.api.EntityPhysicsElement;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.ElementRigidBody;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.Boat;
-import net.minecraft.world.entity.vehicle.Minecart;
-import net.minecraft.world.level.GameType;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.item.EntityBoat;
+import net.minecraft.entity.item.EntityMinecart;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.GameType;
 
 import java.util.List;
 
 public interface EntitySupplier {
 
-    default List<Entity> getInsideOf(ElementRigidBody rigidBody, AABB box) {
+    default List<Entity> getInsideOf(ElementRigidBody rigidBody, AxisAlignedBB box) {
         if (!rigidBody.isInWorld()) {
             return List.of();
         }
 
-        return rigidBody.getSpace().getLevel().getEntitiesOfClass(Entity.class, box,
+        return rigidBody.getSpace().getWorld().getEntitiesOfClass(Entity.class, box,
                 entity ->
                         // Entity can be a Boat, Minecart, or any LivingEntity so long as it is not a player in spectator mode.
                         (
-                            entity instanceof Boat ||
-                            entity instanceof Minecart ||
+                            entity instanceof EntityBoat ||
+                            entity instanceof EntityMinecart ||
                             (
-                                entity instanceof LivingEntity &&
-                                !(entity instanceof Player player && this.getGameType(player) == GameType.SPECTATOR)
+                                entity instanceof EntityLiving &&
+                                !(entity instanceof EntityPlayer player && this.getGameType(player) == GameType.SPECTATOR)
                             )
                         )
                         && !EntityPhysicsElement.is(entity));
     }
 
-    GameType getGameType(Player player);
+    GameType getGameType(EntityPlayer player);
 }

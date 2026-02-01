@@ -1,14 +1,15 @@
 package com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.entity;
 
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.GameType;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.GameType;
 
 public class ServerEntitySupplier implements EntitySupplier {
     @Override
-    public GameType getGameType(Player player) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            return serverPlayer.getLevel().getServer().createGameModeForPlayer(serverPlayer).getGameModeForPlayer();
+    public GameType getGameType(EntityPlayer player) {
+        if (player instanceof EntityPlayerMP serverPlayer) {
+            return serverPlayer.getServerWorld().getMinecraftServer().getGameType();
         }
         return GameType.SURVIVAL;
     }

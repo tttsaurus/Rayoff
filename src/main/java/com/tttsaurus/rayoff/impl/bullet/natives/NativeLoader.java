@@ -2,8 +2,8 @@ package com.tttsaurus.rayoff.impl.bullet.natives;
 
 import com.jme3.system.JmeSystem;
 import com.jme3.system.NativeLibraryLoader;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import com.tttsaurus.rayoff.impl.Rayon;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
@@ -47,9 +47,8 @@ public class NativeLoader {
         }
     }
 
-    @ExpectPlatform
     static Path getGameDir() {
-        throw new AssertionError();
+        return FMLCommonHandler.instance().getSavesDirectory().getParentFile().toPath();
     }
 
     static String getPlatformSpecificName() {

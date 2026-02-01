@@ -8,7 +8,7 @@ import com.mojang.blaze3d.vertex.*;
 import com.tttsaurus.rayoff.api.event.render.DebugRenderEvents;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.MinecraftRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.shape.MinecraftShape;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.ElementRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
 import net.minecraft.client.Minecraft;
@@ -36,7 +36,7 @@ public final class CollisionObjectDebugger {
         final var cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
         final var builder = Tesselator.getInstance().getBuilder();
 
-        DebugRenderEvents.BEFORE_RENDER.invoke(new DebugRenderEvents.Context(space, builder, stack, cameraPos, tickDelta));
+        DebugRenderEvents.BEFORE_RENDER.invoke(new DebugRenderEvents.Context(space));
         builder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
@@ -66,7 +66,7 @@ public final class CollisionObjectDebugger {
 
             stack.pushPose();
             stack.translate(position.x - cameraPos.x, position.y - cameraPos.y, position.z - cameraPos.z);
-            stack.mulPose(Convert.toMinecraft(rotation));
+            stack.mulPose(Convert.toJomlQuat(rotation));
             final var p1 = vertices[0];
             final var p2 = vertices[1];
             final var p3 = vertices[2];

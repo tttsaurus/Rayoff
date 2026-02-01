@@ -1,19 +1,21 @@
 package com.tttsaurus.rayoff.impl.bullet.collision.space.cache;
 
 import com.jme3.math.Vector3f;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.tttsaurus.rayoff.toolbox.api.blockstate.AdvBlockState;
+import com.tttsaurus.rayoff.toolbox.api.math.MatrixStack;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.shape.MinecraftShape;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.block.BlockProperty;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
-import dev.lazurite.transporter.api.Disassembler;
-import dev.lazurite.transporter.api.pattern.Pattern;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.material.FluidState;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
+import com.tttsaurus.rayoff.toolbox.api.pattern.Disassembler;
+import com.tttsaurus.rayoff.toolbox.api.pattern.Pattern;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 import java.util.*;
 
@@ -28,7 +30,7 @@ public interface ChunkCache {
         return new SimpleChunkCache(space);
     }
 
-    static boolean isValidBlock(BlockState blockState) {
+    static boolean isValidBlock(IBlockState blockState, World world, BlockPos pos) {
         if (blockState == null) {
             return false;
         }
@@ -37,24 +39,21 @@ public interface ChunkCache {
         final var properties = BlockProperty.getBlockProperty(block);
 
         return properties != null ? properties.collidable() :
-                !blockState.isAir() &&
-                !block.isPossibleToRespawnInThis() && (
-                        blockState.getFluidState().isEmpty() || (
-                                blockState.hasProperty(BlockStateProperties.WATERLOGGED) &&
-                                blockState.getValue(BlockStateProperties.WATERLOGGED)
-                        )
-                );
+                (blockState.getBlock() != Blocks.AIR)
+                        && (!block.isPassable(world, pos))
+                        && (blockState.getCollisionBoundingBox(world, pos) != Block.NULL_AABB)
+                        && (!blockState.getMaterial().isLiquid());
     }
 
-    static Pattern genShapeForBlock(BlockGetter blockGetter, BlockPos blockPos, BlockState blockState) {
-        final var blockEntity = blockGetter.getBlockEntity(blockPos);
-        final var transformation = new PoseStack();
+    static Pattern genShapeForBlock(World world, BlockPos blockPos, IBlockState blockState) {
+        final var tileEntity = world.getTileEntity(blockPos);
+        final var transformation = new MatrixStack();
         transformation.scale(0.95f, 0.95f, 0.95f);
         transformation.translate(-0.5f, -0.5f, -0.5f);
 
         try {
-            if (blockEntity != null) {
-                return Disassembler.getBlockEntity(blockEntity, transformation);
+            if (tileEntity != null) {
+                return Disassembler.getTileEntity(tileEntity, transformation);
             } else {
                 return Disassembler.getBlock(blockState, transformation);
             }
@@ -76,8 +75,8 @@ public interface ChunkCache {
 
     boolean isActive(BlockPos blockPos);
 
-    record BlockData (Level level, BlockPos blockPos, BlockState blockState, MinecraftShape shape) { }
-    record FluidData (Level level, BlockPos blockPos, FluidState fluidState) { }
+    record BlockData (World level, BlockPos blockPos, IBlockState blockState, MinecraftShape shape) { }
+    record FluidData (World level, BlockPos blockPos, IBlockState fluidState) { }
 
     class FluidColumn {
         private final FluidData top;
@@ -86,35 +85,35 @@ public interface ChunkCache {
         private final float height;
         private long index;
 
-        public FluidColumn(BlockPos start, Level level) {
-            this.index = Integer.toUnsignedLong(start.getX()) << 32l | Integer.toUnsignedLong(start.getZ());
-            final var cursor = new BlockPos(start).mutable();
-            var fluidState = level.getFluidState(cursor);
+        public FluidColumn(BlockPos start, World world) {
+            this.index = Integer.toUnsignedLong(start.getX()) << 32L | Integer.toUnsignedLong(start.getZ());
+            final var cursor = new BlockPos.MutableBlockPos(start);
+            var blockState = AdvBlockState.getFrom(world, cursor);
 
             // find bottom block
-            while (!fluidState.isEmpty()) {
-                cursor.set(cursor.below());
-                fluidState = level.getFluidState(cursor);
+            while (blockState.isFluid()) {
+                cursor.offset(EnumFacing.DOWN);
+                blockState = AdvBlockState.getFrom(world, cursor);
             }
 
-            cursor.set(cursor.above()); // the above loop ends at one below the bottom
-            fluidState = level.getFluidState(cursor);
-            this.bottom = new FluidData(level, new BlockPos(cursor), level.getFluidState(cursor));
+            cursor.offset(EnumFacing.UP); // the above loop ends at one below the bottom
+            blockState = AdvBlockState.getFrom(world, cursor);
+            this.bottom = new FluidData(world, new BlockPos(cursor), blockState.getBlockState());
 
             // find top block
-            while (!fluidState.isEmpty()) {
-                cursor.set(cursor.above());
-                fluidState = level.getFluidState(cursor);
+            while (blockState.isFluid()) {
+                cursor.offset(EnumFacing.UP);
+                blockState = AdvBlockState.getFrom(world, cursor);
             }
 
-            cursor.set(cursor.below());
-            fluidState = level.getFluidState(cursor);
+            cursor.offset(EnumFacing.DOWN);
+            blockState = AdvBlockState.getFrom(world, cursor);
 
-            this.top = new FluidData(level, new BlockPos(cursor), fluidState);
-            this.height = fluidState.getHeight(level, cursor);
+            this.top = new FluidData(world, new BlockPos(cursor), blockState.getBlockState());
+            this.height = blockState.isFluidSource() ? 1f : blockState.getBlockState().getValue(BlockLiquid.LEVEL) / 16f;
 
             // Water flow direction
-            this.flow = Convert.toBullet(fluidState.getFlow(level, cursor));
+            this.flow = Convert.toBulletVec3(blockState.getFlowVector());
         }
 
         public boolean contains(BlockPos blockPos) {

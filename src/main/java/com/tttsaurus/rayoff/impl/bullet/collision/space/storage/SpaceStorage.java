@@ -1,11 +1,10 @@
 package com.tttsaurus.rayoff.impl.bullet.collision.space.storage;
 
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
-import net.minecraft.world.level.Level;
 
 /**
  * Used for storing a {@link MinecraftSpace} within any
- * {@link Level} object.
+ * {@link net.minecraft.world.World} object.
  */
 public interface SpaceStorage {
     void setSpace(MinecraftSpace space);

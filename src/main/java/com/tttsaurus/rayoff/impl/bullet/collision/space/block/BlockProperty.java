@@ -1,7 +1,7 @@
 package com.tttsaurus.rayoff.impl.bullet.collision.space.block;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,9 +12,7 @@ public record BlockProperty (float friction, float restitution, boolean collidab
     static {
         BlockProperty.addBlockProperty(Blocks.ICE, 0.05f, 0.25f, true, true);
         BlockProperty.addBlockProperty(Blocks.SLIME_BLOCK, 3.0f, 3.0f, true, true);
-        BlockProperty.addBlockProperty(Blocks.HONEY_BLOCK, 3.0f, 0.25f, true, true);
         BlockProperty.addBlockProperty(Blocks.SOUL_SAND, 3.0f, 0.25f, true, true);
-        BlockProperty.addBlockProperty(Blocks.LECTERN, 0.75f, 0.25f, true, false);
         BlockProperty.addBlockProperty(Blocks.SNOW, 1.0f, 0.15f, true, true);
     }
 

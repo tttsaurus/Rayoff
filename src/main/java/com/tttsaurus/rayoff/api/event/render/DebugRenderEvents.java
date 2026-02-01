@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.tttsaurus.rayoff.impl.util.debug.CollisionObjectDebugger;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
-import dev.lazurite.toolbox.api.event.Event;
+import com.tttsaurus.rayoff.toolbox.api.event.Event;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -17,13 +17,15 @@ import net.minecraft.world.phys.Vec3;
 public class DebugRenderEvents {
     public static final Event<BeforeRender> BEFORE_RENDER = Event.create();
 
-    private DebugRenderEvents() { }
+    private DebugRenderEvents() {
+    }
 
     @FunctionalInterface
     public interface BeforeRender {
         void onRender(Context context);
     }
 
-    public record Context(MinecraftSpace space, VertexConsumer vertices, PoseStack matrices, Vec3 cameraPos, float tickDelta) { }
+    public record Context(MinecraftSpace space) {
+    }
 }
 

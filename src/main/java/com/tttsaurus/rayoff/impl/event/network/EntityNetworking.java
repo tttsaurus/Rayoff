@@ -4,7 +4,7 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.tttsaurus.rayoff.impl.Rayon;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.EntityRigidBody;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import com.tttsaurus.rayoff.impl.event.ClientEventHandler;
 import com.tttsaurus.rayoff.impl.event.ServerEventHandler;
 import dev.lazurite.toolbox.api.math.QuaternionHelper;
@@ -35,10 +35,10 @@ public interface EntityNetworking {
     static void sendMovement(EntityRigidBody rigidBody) {
         final Consumer<FriendlyByteBuf> encoder = buf -> {
             buf.writeInt(rigidBody.getElement().cast().getId());
-            QuaternionHelper.toBuffer(buf, Convert.toMinecraft(rigidBody.getPhysicsRotation(new Quaternion())));
-            VectorHelper.toBuffer(buf, Convert.toMinecraft(rigidBody.getPhysicsLocation(new Vector3f())));
-            VectorHelper.toBuffer(buf, Convert.toMinecraft(rigidBody.getLinearVelocity(new Vector3f())));
-            VectorHelper.toBuffer(buf, Convert.toMinecraft(rigidBody.getAngularVelocity(new Vector3f())));
+            QuaternionHelper.toBuffer(buf, Convert.toJomlQuat(rigidBody.getPhysicsRotation(new Quaternion())));
+            VectorHelper.toBuffer(buf, Convert.toJomlVec3(rigidBody.getPhysicsLocation(new Vector3f())));
+            VectorHelper.toBuffer(buf, Convert.toJomlVec3(rigidBody.getLinearVelocity(new Vector3f())));
+            VectorHelper.toBuffer(buf, Convert.toJomlVec3(rigidBody.getAngularVelocity(new Vector3f())));
         };
 
         if (rigidBody.getSpace().isServer()) {

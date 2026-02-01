@@ -6,7 +6,7 @@ import com.tttsaurus.rayoff.api.EntityPhysicsElement;
 import com.tttsaurus.rayoff.api.event.collision.PhysicsSpaceEvents;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.ElementRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.entity.ClientEntitySupplier;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import com.tttsaurus.rayoff.impl.event.network.EntityNetworking;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.EntityRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.generator.EntityCollisionGenerator;
@@ -180,7 +180,7 @@ public final class ClientEventHandler {
                     rigidBody.setTerrainLoadingEnabled(terrainLoading);
                     rigidBody.setBuoyancyType(buoyancyType);
                     rigidBody.setDragType(dragType);
-                    rigidBody.prioritize(rigidBody.getSpace().getLevel().getPlayerByUUID(priorityPlayer));
+                    rigidBody.prioritize(rigidBody.getSpace().getWorld().getPlayerByUUID(priorityPlayer));
                     rigidBody.activate();
                 });
             }

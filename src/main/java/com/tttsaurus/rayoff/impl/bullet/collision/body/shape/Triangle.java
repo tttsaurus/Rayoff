@@ -3,9 +3,8 @@ package com.tttsaurus.rayoff.impl.bullet.collision.body.shape;
 import com.jme3.bounding.BoundingBox;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
-import dev.lazurite.transporter.api.pattern.Pattern;
-import net.minecraft.world.phys.shapes.VoxelShape;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
+import com.tttsaurus.rayoff.toolbox.api.pattern.Pattern;
 import org.joml.Matrix4f;
 
 import java.util.ArrayList;
@@ -24,27 +23,6 @@ public class Triangle {
         final var triangles = new ArrayList<Triangle>( 6 * 2);
         createBoxMesh(x, y, z, Vector3f.ZERO, triangles::add);
         return triangles;
-    }
-
-    public static List<Triangle> getMeshOf(VoxelShape voxelShape) {
-        if (voxelShape.isEmpty()) {
-            return List.of();
-        }
-
-        var vec = new Vector3f();
-        var aabbs = voxelShape.toAabbs();
-        final var triangles = new ArrayList<Triangle>( 6 * 2 * aabbs.size());
-
-        for (var box : aabbs) {
-            final var x = box.getXsize() * 0.5f;
-            final var y = box.getYsize() * 0.5f;
-            final var z = box.getZsize() * 0.5f;
-            var center = box.getCenter();
-            vec.set((float) center.x, (float) center.y, (float) center.z).subtractLocal(0.5f, 0.5f, 0.5f);
-            createBoxMesh((float) x, (float) y, (float) z, vec, triangles::add);
-        }
-        return triangles;
-
     }
 
     public static void createBoxMesh(final float x, final float y, final float z, final Vector3f offset, Consumer<Triangle> consumer) {
@@ -99,15 +77,15 @@ public class Triangle {
             final var centroid = new Vector3f();
 
             for (var point : quad.getPoints()) {
-                centroid.addLocal(Convert.toBullet(point));
+                centroid.addLocal(Convert.toBulletVec3(point));
             }
 
             centroid.divideLocal(4);
 
-            triangles.add(new Triangle(Convert.toBullet(quad.getPoints().get(0)), centroid, Convert.toBullet(quad.getPoints().get(1))));
-            triangles.add(new Triangle(Convert.toBullet(quad.getPoints().get(1)), centroid, Convert.toBullet(quad.getPoints().get(2))));
-            triangles.add(new Triangle(Convert.toBullet(quad.getPoints().get(2)), centroid, Convert.toBullet(quad.getPoints().get(3))));
-            triangles.add(new Triangle(Convert.toBullet(quad.getPoints().get(3)), centroid, Convert.toBullet(quad.getPoints().get(0))));
+            triangles.add(new Triangle(Convert.toBulletVec3(quad.getPoints().get(0)), centroid, Convert.toBulletVec3(quad.getPoints().get(1))));
+            triangles.add(new Triangle(Convert.toBulletVec3(quad.getPoints().get(1)), centroid, Convert.toBulletVec3(quad.getPoints().get(2))));
+            triangles.add(new Triangle(Convert.toBulletVec3(quad.getPoints().get(2)), centroid, Convert.toBulletVec3(quad.getPoints().get(3))));
+            triangles.add(new Triangle(Convert.toBulletVec3(quad.getPoints().get(3)), centroid, Convert.toBulletVec3(quad.getPoints().get(0))));
         }
 
         return triangles;
@@ -144,9 +122,9 @@ public class Triangle {
     }
 
     private static Vector3f transform(Vector3f vector, Quaternion quaternion) {
-        return Convert.toBullet(
-                Convert.toMinecraft(vector).mulTransposeDirection(
-                        Convert.toMinecraft(quaternion).get(new Matrix4f())
+        return Convert.toBulletVec3(
+                Convert.toJomlVec3(vector).mulTransposeDirection(
+                        Convert.toJomlQuat(quaternion).get(new Matrix4f())
                 )
         );
     }

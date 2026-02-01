@@ -7,10 +7,9 @@ import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.collision.shapes.infos.IndexedMesh;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.tttsaurus.rayoff.impl.bullet.math.Convert;
-import dev.lazurite.transporter.api.pattern.Pattern;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.shapes.VoxelShape;
+import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
+import com.tttsaurus.rayoff.toolbox.api.pattern.Pattern;
+import net.minecraft.util.math.AxisAlignedBB;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,22 +18,19 @@ import java.util.stream.Stream;
 
 public interface MinecraftShape {
     List<Triangle> getTriangles(Quaternion quaternion);
+
     float getVolume();
 
-    static Box box(AABB box) {
-        return MinecraftShape.box(Convert.toBullet(box));
+    static Box box(AxisAlignedBB box) {
+        return MinecraftShape.box(Convert.toBulletAABB(box));
     }
 
     static Box box(BoundingBox box) {
         return new Box(box);
     }
 
-    static Convex convex(AABB box) {
-        return MinecraftShape.convex(Convert.toBullet(box));
-    }
-
-    static Convex convex(VoxelShape voxelShape) {
-        return new Convex(Triangle.getMeshOf(voxelShape));
+    static Convex convex(AxisAlignedBB box) {
+        return MinecraftShape.convex(Convert.toBulletAABB(box));
     }
 
     static Convex convex(BoundingBox box) {
@@ -45,8 +41,8 @@ public interface MinecraftShape {
         return new Convex(Triangle.getMeshOf(pattern));
     }
 
-    static Concave concave(AABB box) {
-        return MinecraftShape.concave(Convert.toBullet(box));
+    static Concave concave(AxisAlignedBB box) {
+        return MinecraftShape.concave(Convert.toBulletAABB(box));
     }
 
     static Concave concave(BoundingBox box) {
@@ -104,17 +100,17 @@ public interface MinecraftShape {
 
         public Concave(List<Triangle> triangles) {
             super(false,
-                ((Supplier<IndexedMesh>) () -> {
-                    final var vertices = triangles.stream().flatMap(triangle -> Stream.of(triangle.getVertices())).toArray(Vector3f[]::new);
-                    final var indices = new int[vertices.length];
+                    ((Supplier<IndexedMesh>) () -> {
+                        final var vertices = triangles.stream().flatMap(triangle -> Stream.of(triangle.getVertices())).toArray(Vector3f[]::new);
+                        final var indices = new int[vertices.length];
 
-                    for (var i = 0; i < vertices.length; i++) {
-                        indices[i] = i;
+                        for (var i = 0; i < vertices.length; i++) {
+                            indices[i] = i;
+                        }
+
+                        return new IndexedMesh(vertices, indices);
                     }
-
-                    return new IndexedMesh(vertices, indices);
-                }
-            ).get());
+                    ).get());
             this.triangles = triangles;
         }
 

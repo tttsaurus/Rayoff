@@ -5,7 +5,6 @@ import com.jme3.math.Vector3f;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.ElementRigidBody;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.shape.MinecraftShape;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
-import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -20,19 +19,22 @@ public interface PhysicsElement<T> {
      * Gets {@link ElementRigidBody} object associated with this element. You should create and
      * store this in your {@link PhysicsElement} implementation in the constructor. You're able
      * to set up the attributes and settings of your rigid body however you like that way.
+     *
      * @return the {@link ElementRigidBody}
      */
     @Nullable ElementRigidBody getRigidBody();
 
     /**
      * For generating a new {@link MinecraftShape.Convex}.
+     *
      * @return the newly created {@link MinecraftShape.Convex}
      */
     MinecraftShape.Convex createShape();
 
     /**
      * Mainly used for lerping within your renderer.
-     * @param store any vector to store the output in
+     *
+     * @param store     any vector to store the output in
      * @param tickDelta the delta time between ticks
      * @return the lerped vector
      */
@@ -46,7 +48,8 @@ public interface PhysicsElement<T> {
 
     /**
      * Mainly used for lerping within your renderer.
-     * @param store the quaternion to store the output in
+     *
+     * @param store     the quaternion to store the output in
      * @param tickDelta the delta time between ticks
      * @return the "slerped" quaternion
      */
@@ -60,7 +63,8 @@ public interface PhysicsElement<T> {
 
     /**
      * Returns the object as its generic type.
-     * (e.g. {@link EntityPhysicsElement} -> {@link Entity})
+     * (e.g. {@link EntityPhysicsElement} -> {@link net.minecraft.entity.Entity})
+     *
      * @return this as {@link T}
      */
     @SuppressWarnings("unchecked")
