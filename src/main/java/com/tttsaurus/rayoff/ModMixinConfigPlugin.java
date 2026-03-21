@@ -29,10 +29,11 @@ public class ModMixinConfigPlugin implements IMixinConfigPlugin {
      */
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        return switch (mixinClassName.split("\\.")[5]) {
-            case "hei" -> Loader.isModLoaded("jei");
-            default -> true;
-        };
+        if (mixinClassName.contains(".mixin.mod.hei.")) {
+            return Loader.isModLoaded("jei");
+        }
+
+        return true;
     }
 
     @Override

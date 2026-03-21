@@ -1,32 +1,31 @@
 package com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.level;
 
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * This {@link LevelSupplier} provides a list of all
- * {@link ServerLevel} objects running on the {@link MinecraftServer}.
+ * {@link WorldServer} objects running on the {@link MinecraftServer}.
  */
 public record ServerLevelSupplier(MinecraftServer server) implements LevelSupplier {
     @Override
-    public List<Level> getAll() {
-        return new ArrayList<>((Collection<? extends Level>) server.getAllLevels());
+    public List<World> getAll() {
+        return new ArrayList<>(Arrays.asList(server.worlds));
     }
 
     @Override
-    public Level get(ResourceKey<Level> key) {
-        return server.getLevel(key);
+    public World get(int dimensionId) {
+        return server.getWorld(dimensionId);
     }
 
     @Override
-    public Optional<Level> getOptional(ResourceKey<Level> key) {
-        return Optional.ofNullable(get(key));
+    public Optional<World> getOptional(int dimensionId) {
+        return Optional.ofNullable(get(dimensionId));
     }
 }

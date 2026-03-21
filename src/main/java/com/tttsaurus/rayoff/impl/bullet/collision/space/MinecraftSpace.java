@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * This is the main physics simulation used by Rayon. Each bullet simulation update
+ * This is the main physics simulation used by Rayoff. Each bullet simulation update
  * happens asynchronously while all of the setup, input, or otherwise user defined
  * behavior happens on the game logic thread.
  * <br><br>
@@ -44,16 +44,16 @@ public class MinecraftSpace extends PhysicsSpace implements PhysicsCollisionList
     private final ChunkCache chunkCache;
 
     private volatile boolean stepping;
-    private final Set<SectionPos> previousBlockUpdates;
+    private final Set<BlockPos> previousBlockUpdates;
 
     /**
      * Allows users to retrieve the {@link MinecraftSpace} associated
      * with any given {@link World} object (client or server).
-     * @param level the level to get the physics space from
+     * @param world the level to get the physics space from
      * @return the {@link MinecraftSpace}
      */
-    public static MinecraftSpace get(World level) {
-        return ((SpaceStorage) level).getSpace();
+    public static MinecraftSpace get(World world) {
+        return ((SpaceStorage) world).getSpace();
     }
 
     public static Optional<MinecraftSpace> getOptional(World world) {
@@ -184,7 +184,7 @@ public class MinecraftSpace extends PhysicsSpace implements PhysicsCollisionList
     }
 
     public void doBlockUpdate(BlockPos blockPos) {
-        this.previousBlockUpdates.add(SectionPos.of(blockPos));
+        this.previousBlockUpdates.add(blockPos.toImmutable());
     }
 
     public void wakeNearbyElementRigidBodies(BlockPos blockPos) {

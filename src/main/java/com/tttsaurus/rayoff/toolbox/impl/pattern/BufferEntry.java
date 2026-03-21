@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * The main implementation of {@link Pattern}. This is what is stored within a {@link PatternBuffer}.
+ * The main implementation of {@link Pattern}. This is what is stored within a {@link com.tttsaurus.rayoff.toolbox.api.pattern.buffer.PatternBuffer}.
  * @see com.tttsaurus.rayoff.toolbox.impl.pattern.buffer.PatternBufferImpl
  * @see com.tttsaurus.rayoff.toolbox.api.pattern.Disassembler
  */

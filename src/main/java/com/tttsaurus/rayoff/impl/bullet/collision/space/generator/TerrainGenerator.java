@@ -23,8 +23,11 @@ public class TerrainGenerator {
             }
 
             final var aabb = AABBUtils.inflate(rigidBody.getCurrentMinecraftBoundingBox(), 0.5f);
+            final var min = new BlockPos(Math.floor(aabb.minX), Math.floor(aabb.minY), Math.floor(aabb.minZ));
+            final var max = new BlockPos(Math.floor(aabb.maxX), Math.floor(aabb.maxY), Math.floor(aabb.maxZ));
 
-            BlockPos.betweenClosedStream(aabb).forEach(blockPos -> {
+            for (BlockPos.MutableBlockPos mutable : BlockPos.getAllInBoxMutable(min, max)) {
+                BlockPos blockPos = new BlockPos(mutable);
                 chunkCache.getBlockData(blockPos).ifPresent(blockData -> {
                     space.getTerrainObjectAt(blockPos).ifPresentOrElse(terrain -> {
                         if (blockData.blockState() != terrain.getBlockState()) {
@@ -42,7 +45,7 @@ public class TerrainGenerator {
                         keep.add(terrain);
                     });
                 });
-            });
+            }
         }
 
         space.getTerrainMap().forEach((blockPos, terrain) -> {

@@ -4,8 +4,8 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.tttsaurus.rayoff.api.PhysicsElement;
 import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
-import dev.lazurite.toolbox.api.math.QuaternionHelper;
-import dev.lazurite.toolbox.api.math.VectorHelper;
+import com.tttsaurus.rayoff.toolbox.api.math.QuaternionHelper;
+import com.tttsaurus.rayoff.toolbox.api.math.VectorHelper;
 
 /**
  * A {@link Frame} can be used for interpolation on the render thread.

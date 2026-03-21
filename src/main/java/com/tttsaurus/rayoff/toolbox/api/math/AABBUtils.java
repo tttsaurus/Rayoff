@@ -4,7 +4,6 @@ import net.minecraft.util.math.AxisAlignedBB;
 import org.jspecify.annotations.NonNull;
 
 public final class AABBUtils {
-
     private AABBUtils() {
     }
 

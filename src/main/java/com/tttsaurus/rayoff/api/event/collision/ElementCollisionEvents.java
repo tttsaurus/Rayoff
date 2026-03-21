@@ -9,12 +9,12 @@ import com.tttsaurus.rayoff.toolbox.api.event.Event;
  * @since 1.0.0
  */
 public final class ElementCollisionEvents {
+    private ElementCollisionEvents() {
+    }
+
     public static final Event<BlockCollision> BLOCK_COLLISION = Event.create();
     public static final Event<BlockCollision> FLUID_COLLISION = Event.create();
     public static final Event<ElementCollision> ELEMENT_COLLISION = Event.create();
-
-    private ElementCollisionEvents() {
-    }
 
     @FunctionalInterface
     public interface BlockCollision {

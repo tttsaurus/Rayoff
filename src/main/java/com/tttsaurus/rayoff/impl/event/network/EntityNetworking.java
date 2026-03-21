@@ -2,28 +2,28 @@ package com.tttsaurus.rayoff.impl.event.network;
 
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
-import com.tttsaurus.rayoff.impl.Rayon;
+import com.tttsaurus.rayoff.Reference;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.EntityRigidBody;
 import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import com.tttsaurus.rayoff.impl.event.ClientEventHandler;
 import com.tttsaurus.rayoff.impl.event.ServerEventHandler;
-import dev.lazurite.toolbox.api.math.QuaternionHelper;
-import dev.lazurite.toolbox.api.math.VectorHelper;
-import dev.lazurite.toolbox.api.network.ClientNetworking;
-import dev.lazurite.toolbox.api.network.PacketRegistry;
-import dev.lazurite.toolbox.api.network.ServerNetworking;
-import dev.lazurite.toolbox.api.util.PlayerUtil;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import com.tttsaurus.rayoff.toolbox.api.math.QuaternionHelper;
+import com.tttsaurus.rayoff.toolbox.api.math.VectorHelper;
+import com.tttsaurus.rayoff.toolbox.api.network.ClientNetworking;
+import com.tttsaurus.rayoff.toolbox.api.network.PacketRegistry;
+import com.tttsaurus.rayoff.toolbox.api.network.ServerNetworking;
+import com.tttsaurus.rayoff.toolbox.api.util.PlayerUtils;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface EntityNetworking {
-    ResourceLocation MOVEMENT = new ResourceLocation(Rayon.MODID, "movement");
-    ResourceLocation PROPERTIES = new ResourceLocation(Rayon.MODID, "properties");
+    ResourceLocation MOVEMENT = new ResourceLocation(Reference.MOD_ID, "movement");
+    ResourceLocation PROPERTIES = new ResourceLocation(Reference.MOD_ID, "properties");
 
-    static void register() {
+    static void registerServer() {
         PacketRegistry.registerServerbound(MOVEMENT, ServerEventHandler::onMovementPacketReceived);
     }
 
@@ -33,8 +33,8 @@ public interface EntityNetworking {
     }
 
     static void sendMovement(EntityRigidBody rigidBody) {
-        final Consumer<FriendlyByteBuf> encoder = buf -> {
-            buf.writeInt(rigidBody.getElement().cast().getId());
+        final Consumer<PacketBuffer> encoder = buf -> {
+            buf.writeInt(rigidBody.getElement().cast().getEntityId());
             QuaternionHelper.toBuffer(buf, Convert.toJomlQuat(rigidBody.getPhysicsRotation(new Quaternion())));
             VectorHelper.toBuffer(buf, Convert.toJomlVec3(rigidBody.getPhysicsLocation(new Vector3f())));
             VectorHelper.toBuffer(buf, Convert.toJomlVec3(rigidBody.getLinearVelocity(new Vector3f())));
@@ -42,7 +42,7 @@ public interface EntityNetworking {
         };
 
         if (rigidBody.getSpace().isServer()) {
-            PlayerUtil.tracking(rigidBody.getElement().cast()).forEach(player -> {
+            PlayerUtils.tracking(rigidBody.getElement().cast()).forEach(player -> {
                 if (!player.equals(rigidBody.getPriorityPlayer())) {
                     ServerNetworking.send(player, MOVEMENT, encoder);
                 }
@@ -53,20 +53,20 @@ public interface EntityNetworking {
     }
 
     static void sendProperties(EntityRigidBody rigidBody) {
-        final Consumer<FriendlyByteBuf> encoder = buf -> {
-            buf.writeInt(rigidBody.getElement().cast().getId());
+        final Consumer<PacketBuffer> encoder = buf -> {
+            buf.writeInt(rigidBody.getElement().cast().getEntityId());
             buf.writeFloat(rigidBody.getMass());
             buf.writeFloat(rigidBody.getDragCoefficient());
             buf.writeFloat(rigidBody.getFriction());
             buf.writeFloat(rigidBody.getRestitution());
             buf.writeBoolean(rigidBody.terrainLoadingEnabled());
-            buf.writeEnum(rigidBody.getBuoyancyType());
-            buf.writeEnum(rigidBody.getDragType());
-            buf.writeUUID(rigidBody.getPriorityPlayer() == null ? new UUID(0, 0) : rigidBody.getPriorityPlayer().getUUID());
+            buf.writeEnumValue(rigidBody.getBuoyancyType());
+            buf.writeEnumValue(rigidBody.getDragType());
+            buf.writeUniqueId(rigidBody.getPriorityPlayer() == null ? new UUID(0, 0) : rigidBody.getPriorityPlayer().getUniqueID());
         };
 
         if (rigidBody.getSpace().isServer()) {
-            PlayerUtil.tracking(rigidBody.getElement().cast()).forEach(player -> ServerNetworking.send(player, PROPERTIES, encoder));
+            PlayerUtils.tracking(rigidBody.getElement().cast()).forEach(player -> ServerNetworking.send(player, PROPERTIES, encoder));
         }
     }
 }

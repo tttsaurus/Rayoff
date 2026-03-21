@@ -4,6 +4,7 @@ import com.cleanroommc.kirino.utils.ReflectionUtils;
 import com.google.common.base.Preconditions;
 import com.tttsaurus.rayoff.toolbox.api.event.Event;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
@@ -42,11 +43,8 @@ public class EventImpl<T> implements Event<T> {
     }
 
     @Override
-    public void invoke(@NonNull Object @NonNull ... params) {
+    public void invoke(@Nullable Object @NonNull ... params) {
         Preconditions.checkNotNull(params);
-        for (Object param : params) {
-            Preconditions.checkNotNull(param);
-        }
 
         for (int i = 0; i < events.size(); i++) {
             Preconditions.checkArgument(params.length == methodParamCount.get(i),

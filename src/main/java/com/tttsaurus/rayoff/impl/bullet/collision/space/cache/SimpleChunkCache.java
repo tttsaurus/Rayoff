@@ -50,7 +50,7 @@ public class SimpleChunkCache implements ChunkCache {
     public void loadFluidData(BlockPos blockPos) {
         final var world = space.getWorld();
 
-        if (AdvBlockState.getFrom(world.getBlockState(blockPos)).isFluid()) {
+        if (AdvBlockState.getFrom(world, blockPos).isFluid()) {
             var columns = this.fluidColumnByIndex.get(columnIndex(blockPos));
 
             if (columns == null || columns.stream().noneMatch(column -> column.contains(blockPos))) {
@@ -66,7 +66,7 @@ public class SimpleChunkCache implements ChunkCache {
         final var level = space.getWorld();
         final var blockState = level.getBlockState(blockPos);
 
-        loadBlockData(blockPos.immutable(), level, blockState);
+        loadBlockData(new BlockPos(blockPos), level, blockState);
     }
 
     private void loadBlockData(BlockPos blockPos, World level, IBlockState blockState) {
@@ -89,15 +89,17 @@ public class SimpleChunkCache implements ChunkCache {
             }
 
             final var aabb = AABBUtils.inflate(rigidBody.getCurrentMinecraftBoundingBox(), 1.0f + Math.sqrt(rigidBody.getSquaredSpeed()) / 20f);
+            final var min = new BlockPos(Math.floor(aabb.minX), Math.floor(aabb.minY), Math.floor(aabb.minZ));
+            final var max = new BlockPos(Math.floor(aabb.maxX), Math.floor(aabb.maxY), Math.floor(aabb.maxZ));
 
-            BlockPos.betweenClosedStream(aabb).forEach(blockPos -> {
-                if (this.activePositions.contains(blockPos.asLong())) {
-                    return;
+            for (BlockPos.MutableBlockPos blockPos : BlockPos.getAllInBoxMutable(min, max)) {
+                if (this.activePositions.contains(blockPos.toLong())) {
+                    continue;
                 }
 
-                var pos = blockPos.immutable();
+                var pos = new BlockPos(blockPos);
                 this.activeColumn.computeIfAbsent(columnIndex(pos), (a) -> new ObjectArrayList<>(512)).add(pos);
-                this.activePositions.add(pos.asLong());
+                this.activePositions.add(pos.toLong());
 
                 var blockData = this.blockData.get(pos);
                 final var blockState = level.getBlockState(pos);
@@ -113,10 +115,10 @@ public class SimpleChunkCache implements ChunkCache {
                 if (this.getFluidColumn(pos).isEmpty()) {
                     loadFluidData(pos);
                 }
-            });
+            }
         }
 
-        this.blockData.keySet().removeIf(blockPos -> !this.activePositions.contains(blockPos.asLong()));
+        this.blockData.keySet().removeIf(blockPos -> !this.activePositions.contains(blockPos.toLong()));
         this.fluidColumns.removeIf(column -> {
             var x = !isInActiveColumn(column);
 
@@ -186,6 +188,6 @@ public class SimpleChunkCache implements ChunkCache {
 
     @Override
     public boolean isActive(BlockPos blockPos) {
-        return this.activePositions.contains(blockPos.asLong());
+        return this.activePositions.contains(blockPos.toLong());
     }
 }

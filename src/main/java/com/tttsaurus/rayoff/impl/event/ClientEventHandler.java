@@ -1,7 +1,6 @@
 package com.tttsaurus.rayoff.impl.event;
 
 import com.jme3.math.Vector3f;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.tttsaurus.rayoff.api.EntityPhysicsElement;
 import com.tttsaurus.rayoff.api.event.collision.PhysicsSpaceEvents;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.ElementRigidBody;
@@ -14,16 +13,16 @@ import com.tttsaurus.rayoff.impl.bullet.collision.space.storage.SpaceStorage;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.level.ClientLevelSupplier;
 import com.tttsaurus.rayoff.impl.bullet.thread.PhysicsThread;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
-import com.tttsaurus.rayoff.impl.bullet.thread.util.ClientUtil;
+import com.tttsaurus.rayoff.impl.bullet.thread.util.ClientUtils;
 import com.tttsaurus.rayoff.impl.util.debug.CollisionObjectDebugger;
-import dev.lazurite.toolbox.api.event.ClientEvents;
-import dev.lazurite.toolbox.api.math.QuaternionHelper;
-import dev.lazurite.toolbox.api.math.VectorHelper;
-import dev.lazurite.toolbox.api.network.PacketRegistry;
+import com.tttsaurus.rayoff.toolbox.api.event.ClientEvents;
+import com.tttsaurus.rayoff.toolbox.api.math.QuaternionHelper;
+import com.tttsaurus.rayoff.toolbox.api.math.VectorHelper;
+import com.tttsaurus.rayoff.toolbox.api.network.PacketRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.world.World;
 
 public final class ClientEventHandler {
     private static PhysicsThread thread;
@@ -44,20 +43,20 @@ public final class ClientEventHandler {
         ClientEvents.Tick.END_LEVEL_TICK.register(ClientEventHandler::onEntityStartLevelTick);
 
         // Render Events
-        ClientEvents.Render.BEFORE_DEBUG.register((poseStack, camera, level, tickDelta) -> ClientEventHandler.onDebugRender(level, poseStack, tickDelta));
+        ClientEvents.Render.BEFORE_DEBUG.register((tickDelta, level) -> ClientEventHandler.onDebugRender(level, tickDelta));
 
         // Entity Events
         ClientEvents.Entity.LOAD.register(ClientEventHandler::onEntityLoad);
         ClientEvents.Entity.UNLOAD.register(ClientEventHandler::onEntityUnload);
     }
 
-    public static void onStartLevelTick(Level level) {
-        if (!ClientUtil.isPaused()) {
+    public static void onStartLevelTick(World level) {
+        if (!ClientUtils.isPaused()) {
             MinecraftSpace.get(level).step();
         }
     }
 
-    public static void onLevelLoad(Minecraft minecraft, ClientLevel level) {
+    public static void onLevelLoad(Minecraft minecraft, WorldClient level) {
         var space = new MinecraftSpace(thread, level);
         ((SpaceStorage) level).setSpace(space);
         PhysicsSpaceEvents.INIT.invoke(space);
@@ -70,24 +69,26 @@ public final class ClientEventHandler {
     }
 
     public static void onGameJoin(Minecraft minecraft) {
-//        var supplier = RayonCore.isImmersivePortalsPresent() ? new ImmersiveWorldSupplier(minecraft) : new ClientLevelSupplier(minecraft);
         var supplier = new ClientLevelSupplier(minecraft);
         thread = new PhysicsThread(minecraft, Thread.currentThread(), supplier, new ClientEntitySupplier(), "Client Physics Thread");
     }
 
-    public static void onDisconnect(Minecraft minecraft, ClientLevel level) {
-        thread.destroy();
+    public static void onDisconnect(Minecraft minecraft, WorldClient level) {
+        if (thread != null) {
+            thread.destroy();
+            thread = null;
+        }
     }
 
-    public static void onDebugRender(Level level, PoseStack stack, float tickDelta) {
+    public static void onDebugRender(World level, float tickDelta) {
         if (CollisionObjectDebugger.isEnabled()) {
-            CollisionObjectDebugger.renderSpace(MinecraftSpace.get(level), stack, tickDelta);
+            CollisionObjectDebugger.renderSpace(MinecraftSpace.get(level), tickDelta);
         }
     }
 
     public static void onEntityLoad(Entity entity) {
         if (EntityPhysicsElement.is(entity)) {
-            var level = entity.level;
+            var level = entity.world;
 
             PhysicsThread.get(level).execute(
                     () -> MinecraftSpace.getOptional(level).ifPresent(
@@ -99,7 +100,7 @@ public final class ClientEventHandler {
 
     public static void onEntityUnload(Entity entity) {
         if (EntityPhysicsElement.is(entity)) {
-            var level = entity.level;
+            var level = entity.world;
 
             PhysicsThread.get(level).execute(
                     () -> MinecraftSpace.getOptional(level).ifPresent(
@@ -109,12 +110,12 @@ public final class ClientEventHandler {
         }
     }
 
-    public static void onEntityStartLevelTick(Level level) {
+    public static void onEntityStartLevelTick(World level) {
         var space = MinecraftSpace.get(level);
         EntityCollisionGenerator.step(space);
 
         for (var rigidBody : space.getRigidBodiesByClass(EntityRigidBody.class)) {
-            var player = Minecraft.getInstance().player;
+            var player = Minecraft.getMinecraft().player;
 
             /* Movement */
             if (rigidBody.isActive() && rigidBody.isPositionDirty() && player != null && player.equals(rigidBody.getPriorityPlayer())) {
@@ -123,7 +124,7 @@ public final class ClientEventHandler {
 
             /* Set entity position */
             var location = rigidBody.getFrame().getLocation(new Vector3f(), 1.0f);
-            rigidBody.getElement().cast().absMoveTo(location.x, location.y, location.z);
+            rigidBody.getElement().cast().setPosition(location.x, location.y, location.z);
         }
     }
 
@@ -134,10 +135,10 @@ public final class ClientEventHandler {
         var location = Convert.toBullet(VectorHelper.fromBuffer(buf));
         var linearVelocity = Convert.toBullet(VectorHelper.fromBuffer(buf));
         var angularVelocity = Convert.toBullet(VectorHelper.fromBuffer(buf));
-        var level = Minecraft.getInstance().level;
+        var level = Minecraft.getMinecraft().world;
 
         if (level != null) {
-            var entity = Minecraft.getInstance().level.getEntity(entityId);
+            var entity = level.getEntityByID(entityId);
 
             if (EntityPhysicsElement.is(entity)) {
                 var rigidBody = EntityPhysicsElement.get(entity).getRigidBody();
@@ -161,13 +162,13 @@ public final class ClientEventHandler {
         var friction = buf.readFloat();
         var restitution = buf.readFloat();
         var terrainLoading = buf.readBoolean();
-        var buoyancyType = buf.readEnum(ElementRigidBody.BuoyancyType.class);
-        var dragType = buf.readEnum(ElementRigidBody.DragType.class);
-        var priorityPlayer = buf.readUUID();
-        var level = Minecraft.getInstance().level;
+        var buoyancyType = buf.readEnumValue(ElementRigidBody.BuoyancyType.class);
+        var dragType = buf.readEnumValue(ElementRigidBody.DragType.class);
+        var priorityPlayer = buf.readUniqueId();
+        var level = Minecraft.getMinecraft().world;
 
         if (level != null) {
-            var entity = level.getEntity(entityId);
+            var entity = level.getEntityByID(entityId);
 
             if (EntityPhysicsElement.is(entity)) {
                 var rigidBody = EntityPhysicsElement.get(entity).getRigidBody();
@@ -180,7 +181,7 @@ public final class ClientEventHandler {
                     rigidBody.setTerrainLoadingEnabled(terrainLoading);
                     rigidBody.setBuoyancyType(buoyancyType);
                     rigidBody.setDragType(dragType);
-                    rigidBody.prioritize(rigidBody.getSpace().getWorld().getPlayerByUUID(priorityPlayer));
+                    rigidBody.prioritize(rigidBody.getSpace().getWorld().getPlayerEntityByUUID(priorityPlayer));
                     rigidBody.activate();
                 });
             }

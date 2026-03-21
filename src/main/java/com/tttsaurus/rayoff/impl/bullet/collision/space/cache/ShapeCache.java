@@ -3,6 +3,8 @@ package com.tttsaurus.rayoff.impl.bullet.collision.space.cache;
 import com.tttsaurus.rayoff.impl.bullet.collision.body.shape.MinecraftShape;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.block.BlockProperty;
 import com.tttsaurus.rayoff.toolbox.api.pattern.Pattern;
+import com.tttsaurus.rayoff.toolbox.impl.Transporter;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -17,17 +19,14 @@ public final class ShapeCache {
 
     private static final IdentityHashMap<IBlockState, MinecraftShape> SHAPES_SERVER = new IdentityHashMap<>();
     private static final IdentityHashMap<IBlockState, MinecraftShape> SHAPES_CLIENT = new IdentityHashMap<>();
+    private static final BlockPos ORIGIN = new BlockPos(0, 0, 0);
 
     public static MinecraftShape getShapeFor(IBlockState blockState, World world, BlockPos blockPos) {
-        if (blockState.getBlock().hasDynamicShape()) {
-            return createShapeFor(blockState, world, blockPos);
-        }
-
-        final var shapes = getShapes(world.isClientSide);
+        final var shapes = getShapes(world.isRemote);
         var shape = shapes.get(blockState);
 
         if (shape == null) {
-            shape = createShapeFor(blockState, world, BlockPos.ZERO);
+            shape = createShapeFor(blockState, world, ORIGIN);
             shapes.put(blockState, shape);
         }
 
@@ -43,13 +42,13 @@ public final class ShapeCache {
         final var properties = BlockProperty.getBlockProperty(blockState.getBlock());
         MinecraftShape shape = null;
 
-        if (!blockState.isCollisionShapeFullBlock(world, blockPos) || (properties != null && !properties.isFullBlock())) {
+        if ((blockState.getCollisionBoundingBox(world, blockPos) != Block.NULL_AABB && !blockState.isFullCube()) || (properties != null && !properties.isFullBlock())) {
             Pattern pattern;
 
-            if (world.isClientSide) {
+            if (world.isRemote) {
                 pattern = ChunkCache.genShapeForBlock(world, blockPos, blockState);
             } else {
-                pattern = Transporter.getPatternBuffer().getBlock(Block.getId(blockState));
+                pattern = Transporter.getPatternBuffer().getBlock(Block.getIdFromBlock(blockState.getBlock()));
             }
 
             if (pattern != null && !pattern.getQuads().isEmpty()) {
@@ -58,9 +57,9 @@ public final class ShapeCache {
         }
 
         if (shape == null) {
-            final var voxelShape = blockState.getCollisionShape(world, blockPos);
-            if (!voxelShape.isEmpty()) {
-                shape = MinecraftShape.convex(voxelShape);
+            final AxisAlignedBB box = blockState.getCollisionBoundingBox(world, blockPos);
+            if (box != Block.NULL_AABB) {
+                shape = MinecraftShape.convex(box.offset(-blockPos.getX(), -blockPos.getY(), -blockPos.getZ()));
             } else {
                 shape = FALLBACK_SHAPE;
             }

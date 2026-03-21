@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 
-public class ClientUtil {
+public class ClientUtils {
     public static boolean isClient() {
         return FMLCommonHandler.instance().getSide() == Side.CLIENT;
     }

@@ -19,7 +19,7 @@ public interface EntitySupplier {
             return List.of();
         }
 
-        return rigidBody.getSpace().getWorld().getEntitiesOfClass(Entity.class, box,
+        return rigidBody.getSpace().getWorld().getEntitiesWithinAABB(Entity.class, box,
                 entity ->
                         // Entity can be a Boat, Minecart, or any LivingEntity so long as it is not a player in spectator mode.
                         (

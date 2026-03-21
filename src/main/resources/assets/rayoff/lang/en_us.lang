@@ -1,2 +1,2 @@
-debug.rayon.on=Rigid Body Hitboxes: shown
-debug.rayon.off=Rigid Body Hitboxes: hidden
+debug.rayoff.on=Rigid Body Hitboxes: shown
+debug.rayoff.off=Rigid Body Hitboxes: hidden

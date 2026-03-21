@@ -8,18 +8,16 @@ public class ClientEntitySupplier implements EntitySupplier {
     @Override
     public GameType getGameType(EntityPlayer player) {
         var client = Minecraft.getMinecraft();
-        var id = player.getUUID();
+        var id = player.getUniqueID();
 
-        // Is client player
-        if (client.player != null && client.player.getUUID().equals(id) && client.gameMode != null) {
-            return client.gameMode.getPlayerMode();
+        if (client.player != null && client.player.getUniqueID().equals(id) && client.playerController != null) {
+            return client.playerController.getCurrentGameType();
         }
 
-        // Is remote player
         var connection = Minecraft.getMinecraft().getConnection();
-        if (connection != null && connection.getOnlinePlayerIds().contains(id)) {
+        if (connection != null) {
             var playerInfo = connection.getPlayerInfo(id);
-            return playerInfo == null ? GameType.SURVIVAL : playerInfo.getGameMode();
+            return playerInfo == null ? GameType.SURVIVAL : playerInfo.getGameType();
         }
 
         return GameType.SURVIVAL;

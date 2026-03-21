@@ -40,6 +40,11 @@ public final class Convert {
     }
 
     @NonNull
+    public static Quaternion toBullet(@NonNull Quaternionf quat) {
+        return toBulletQuat(quat);
+    }
+
+    @NonNull
     public static Quaternionf toJomlQuat(@NonNull Quaternion quat) {
         return new Quaternionf(quat.getX(), quat.getY(), quat.getZ(), quat.getW());
     }
@@ -52,6 +57,11 @@ public final class Convert {
     }
 
     @NonNull
+    public static Vector3f toBullet(org.joml.@NonNull Vector3f vec3) {
+        return toBulletVec3(vec3);
+    }
+
+    @NonNull
     public static Vector3f toBulletVec3(@NonNull BlockPos blockPos) {
         return new Vector3f(blockPos.getX() + 0.5f, blockPos.getY() + 0.5f, blockPos.getZ() + 0.5f);
     }
@@ -59,6 +69,11 @@ public final class Convert {
     @NonNull
     public static Vector3f toBulletVec3(@NonNull Vec3d vec3) {
         return new Vector3f((float) vec3.x, (float) vec3.y, (float) vec3.z);
+    }
+
+    @NonNull
+    public static Vector3f toBullet(@NonNull Vec3d vec3) {
+        return toBulletVec3(vec3);
     }
 
     public static org.joml.@NonNull Vector3f toJomlVec3(@NonNull Vector3f vec3) {

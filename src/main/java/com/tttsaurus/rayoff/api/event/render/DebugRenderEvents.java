@@ -1,11 +1,8 @@
 package com.tttsaurus.rayoff.api.event.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.tttsaurus.rayoff.impl.util.debug.CollisionObjectDebugger;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
 import com.tttsaurus.rayoff.toolbox.api.event.Event;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * The events available through this class are:
@@ -14,11 +11,11 @@ import net.minecraft.world.phys.Vec3;
  * </ul>
  * @since 1.3.0
  */
-public class DebugRenderEvents {
-    public static final Event<BeforeRender> BEFORE_RENDER = Event.create();
-
+public final class DebugRenderEvents {
     private DebugRenderEvents() {
     }
+
+    public static final Event<BeforeRender> BEFORE_RENDER = Event.create();
 
     @FunctionalInterface
     public interface BeforeRender {
@@ -28,4 +25,3 @@ public class DebugRenderEvents {
     public record Context(MinecraftSpace space) {
     }
 }
-

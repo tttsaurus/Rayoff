@@ -2,10 +2,10 @@ package com.tttsaurus.rayoff.impl.bullet.thread;
 
 import com.tttsaurus.rayoff.api.PhysicsElement;
 import com.tttsaurus.rayoff.api.event.collision.PhysicsSpaceEvents;
-import com.tttsaurus.rayoff.impl.Rayon;
+import com.tttsaurus.rayoff.impl.RayoffCore;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.entity.EntitySupplier;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.level.LevelSupplier;
-import com.tttsaurus.rayoff.impl.bullet.thread.util.ClientUtil;
+import com.tttsaurus.rayoff.impl.bullet.thread.util.ClientUtils;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 
 /**
- * In order to access an instance of this, all you need is a {@link net.minecraft.world.World} or {@link ReentrantBlockableEventLoop} object.
+ * In order to access an instance of this, all you need is a {@link net.minecraft.world.World} or parent executor object.
  * Calling {@link PhysicsThread#execute} adds a runnable to the queue of tasks and is the main way to execute code on
  * this thread. You can also execute code here by using {@link PhysicsSpaceEvents}.
  * @see PhysicsSpaceEvents
@@ -26,7 +26,7 @@ import java.util.concurrent.Executor;
  */
 public class PhysicsThread extends Thread implements Executor {
     private final Queue<Runnable> tasks = new ConcurrentLinkedQueue<>();
-    private final Executor parentExecutor;
+    private final Object parentExecutor;
     private final Thread parentThread;
     private final LevelSupplier levelSupplier;
     private final EntitySupplier entitySupplier;
@@ -34,19 +34,19 @@ public class PhysicsThread extends Thread implements Executor {
     public volatile Throwable throwable;
     public volatile boolean running = true;
 
-    public static Optional<PhysicsThread> getOptional(ReentrantBlockableEventLoop<? extends Runnable> executor) {
+    public static Optional<PhysicsThread> getOptional(Object executor) {
         return Optional.ofNullable(get(executor));
     }
 
-    public static PhysicsThread get(ReentrantBlockableEventLoop<? extends Runnable> executor) {
-        return Rayon.getThread(!(executor instanceof MinecraftServer));
+    public static PhysicsThread get(Object executor) {
+        return RayoffCore.getThread(!(executor instanceof MinecraftServer));
     }
 
     public static PhysicsThread get(World world) {
         return MinecraftSpace.get(world).getWorkerThread();
     }
 
-    public PhysicsThread(Executor parentExecutor, Thread parentThread, LevelSupplier levelSupplier, EntitySupplier entitySupplier, String name) {
+    public PhysicsThread(Object parentExecutor, Thread parentThread, LevelSupplier levelSupplier, EntitySupplier entitySupplier, String name) {
         this.parentExecutor = parentExecutor;
         this.parentThread = parentThread;
         this.levelSupplier = levelSupplier;
@@ -58,7 +58,7 @@ public class PhysicsThread extends Thread implements Executor {
             this.throwable = throwable;
         });
 
-        Rayon.LOGGER.info("Starting " + getName());
+        RayoffCore.LOGGER.info("Starting " + getName());
         this.start();
     }
 
@@ -68,8 +68,8 @@ public class PhysicsThread extends Thread implements Executor {
     @Override
     public void run() {
         while (running) {
-            if (!ClientUtil.isPaused()) {
-                /* Run all queued tasks */
+            if (!ClientUtils.isPaused()) {
+                // Run all queued tasks
                 while (!tasks.isEmpty()) {
                     tasks.poll().run();
                 }
@@ -110,9 +110,9 @@ public class PhysicsThread extends Thread implements Executor {
      * especially server-side where {@link MinecraftServer} isn't always readily
      * available.
      *
-     * @return the original {@link Executor} object
+     * @return the original parent executor object
      */
-    public Executor getParentExecutor() {
+    public Object getParentExecutor() {
         return this.parentExecutor;
     }
 
@@ -131,14 +131,22 @@ public class PhysicsThread extends Thread implements Executor {
      * Join the thread when the game closes.
      */
     public void destroy() {
+        RayoffCore.LOGGER.info("Stopping {}.", getName());
+
         this.running = false;
-        Rayon.LOGGER.info("Stopping " + getName());
+
+        interrupt();
 
         try {
-            this.join(5000); // 5 second timeout
+            join(5000);
+            if (isAlive()) {
+                RayoffCore.LOGGER.warn("{} did not terminate within timeout.", getName());
+            } else {
+                RayoffCore.LOGGER.info("{} stopped successfully.", getName());
+            }
         } catch (InterruptedException e) {
-            Rayon.LOGGER.error("Error joining " + getName());
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
+            RayoffCore.LOGGER.error("Interrupted while waiting for {} to stop.", getName(), e);
         }
     }
 }

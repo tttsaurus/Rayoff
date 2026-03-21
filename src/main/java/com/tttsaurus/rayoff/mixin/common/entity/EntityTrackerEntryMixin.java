@@ -1,8 +1,8 @@
-package com.tttsaurus.rayoff.impl.mixin.common.entity;
+package com.tttsaurus.rayoff.mixin.common.entity;
 
 import com.tttsaurus.rayoff.api.EntityPhysicsElement;
-import net.minecraft.server.level.ServerEntity;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityTrackerEntry;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -14,9 +14,9 @@ import java.util.function.Consumer;
 /**
  * Prevents certain packets from being sent for {@link EntityPhysicsElement}s.
  */
-@Mixin(ServerEntity.class)
+@Mixin(EntityTrackerEntry.class)
 public class EntityTrackerEntryMixin {
-    @Shadow @Final private Entity entity;
+    @Shadow @Final public Entity trackedEntity;
 
     @Redirect(
             method = "sendChanges",
@@ -27,7 +27,7 @@ public class EntityTrackerEntryMixin {
             )
     )
     public void rotate(Consumer consumer, Object object) {
-        if (!EntityPhysicsElement.is(entity)) {
+        if (!EntityPhysicsElement.is(trackedEntity)) {
             consumer.accept(object);
         }
     }
@@ -41,7 +41,7 @@ public class EntityTrackerEntryMixin {
             )
     )
     public void velocity(Consumer consumer, Object object) {
-        if (!EntityPhysicsElement.is(entity)) {
+        if (!EntityPhysicsElement.is(trackedEntity)) {
             consumer.accept(object);
         }
     }
@@ -55,7 +55,7 @@ public class EntityTrackerEntryMixin {
             )
     )
     public void multiple(Consumer consumer, Object object) {
-        if (!EntityPhysicsElement.is(entity)) {
+        if (!EntityPhysicsElement.is(trackedEntity)) {
             consumer.accept(object);
         }
     }

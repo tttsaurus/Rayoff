@@ -1,11 +1,11 @@
-package com.tttsaurus.rayoff.impl.mixin.common.entity;
+package com.tttsaurus.rayoff.mixin.common.entity;
 
 import com.tttsaurus.rayoff.api.EntityPhysicsElement;
 import com.tttsaurus.rayoff.api.PhysicsElement;
 import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Explosion;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Explosion;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,11 +29,11 @@ public class ExplosionMixin {
             method = "explode",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/entity/Entity;ignoreExplosion()Z"
+                    target = "Lnet/minecraft/entity/Entity;isImmuneToExplosions()Z"
             ),
             locals = LocalCapture.CAPTURE_FAILHARD
     )
-    public void collectBlocksAndDamageEntities(CallbackInfo info, Set set, int q, float r, int s, int t, int u, int v, int w, int x, List list, Vec3 vec3, int y, Entity entity) {
+    public void collectBlocksAndDamageEntities(CallbackInfo info, Set set, int q, float r, int s, int t, int u, int v, int w, int x, List list, Vec3d vec3, int y, Entity entity) {
         this.entity = entity;
     }
 
@@ -41,10 +41,10 @@ public class ExplosionMixin {
             method = "explode",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/entity/Entity;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"
+                    target = "Lnet/minecraft/entity/Entity;addVelocity(DDD)V"
             )
     )
-    public Vec3 setVelocity(Vec3 velocity) {
+    public Vec3d setVelocity(Vec3d velocity) {
         if (EntityPhysicsElement.is(entity)) {
             var element = EntityPhysicsElement.get(entity);
             element.getRigidBody().applyCentralImpulse(Convert.toBullet(velocity).multLocal(element.getRigidBody().getMass() * 100f));

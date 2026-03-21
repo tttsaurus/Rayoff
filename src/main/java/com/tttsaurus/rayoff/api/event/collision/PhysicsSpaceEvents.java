@@ -8,13 +8,13 @@ import com.tttsaurus.rayoff.toolbox.api.event.Event;
  * @since 1.0.0
  */
 public final class PhysicsSpaceEvents {
+    private PhysicsSpaceEvents() {
+    }
+
     public static final Event<Init> INIT = Event.create();
     public static final Event<Step> STEP = Event.create();
     public static final Event<ElementAdded> ELEMENT_ADDED = Event.create();
     public static final Event<ElementRemoved> ELEMENT_REMOVED = Event.create();
-
-    private PhysicsSpaceEvents() {
-    }
 
     @FunctionalInterface
     public interface Init {

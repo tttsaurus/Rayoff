@@ -1,5 +1,6 @@
 package com.tttsaurus.rayoff.impl.event;
 
+import com.google.common.base.Preconditions;
 import com.jme3.math.Vector3f;
 import com.tttsaurus.rayoff.api.EntityPhysicsElement;
 import com.tttsaurus.rayoff.api.event.collision.PhysicsSpaceEvents;
@@ -15,19 +16,19 @@ import com.tttsaurus.rayoff.impl.bullet.collision.space.supplier.level.ServerLev
 import com.tttsaurus.rayoff.toolbox.api.compat.Convert;
 import com.tttsaurus.rayoff.impl.bullet.thread.PhysicsThread;
 import com.tttsaurus.rayoff.impl.bullet.collision.space.MinecraftSpace;
-import com.tttsaurus.rayoff.impl.bullet.thread.util.ClientUtil;
-import dev.lazurite.toolbox.api.event.ServerEvents;
-import dev.lazurite.toolbox.api.math.QuaternionHelper;
-import dev.lazurite.toolbox.api.math.VectorHelper;
-import dev.lazurite.toolbox.api.network.PacketRegistry;
-import dev.lazurite.toolbox.api.util.PlayerUtil;
-import net.minecraft.core.BlockPos;
+import com.tttsaurus.rayoff.impl.bullet.thread.util.ClientUtils;
+import com.tttsaurus.rayoff.toolbox.api.event.ServerEvents;
+import com.tttsaurus.rayoff.toolbox.api.math.QuaternionHelper;
+import com.tttsaurus.rayoff.toolbox.api.math.VectorHelper;
+import com.tttsaurus.rayoff.toolbox.api.network.PacketRegistry;
+import com.tttsaurus.rayoff.toolbox.api.util.PlayerUtils;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 public final class ServerEventHandler {
     private static PhysicsThread thread;
@@ -37,7 +38,7 @@ public final class ServerEventHandler {
     }
 
     public static void register() {
-        // Rayon Events
+        // Rayoff Events
         PhysicsSpaceEvents.STEP.register(PressureGenerator::step);
         PhysicsSpaceEvents.STEP.register(TerrainGenerator::step);
         PhysicsSpaceEvents.ELEMENT_ADDED.register(ServerEventHandler::onElementAddedToSpace);
@@ -59,7 +60,7 @@ public final class ServerEventHandler {
         ServerEvents.Entity.STOP_TRACKING.register(ServerEventHandler::onStopTrackingEntity);
     }
 
-    public static void onBlockUpdate(Level level, BlockState blockState, BlockPos blockPos) {
+    public static void onBlockUpdate(World level, IBlockState blockState, BlockPos blockPos) {
         MinecraftSpace.getOptional(level).ifPresent(space -> space.doBlockUpdate(blockPos));
     }
 
@@ -68,7 +69,10 @@ public final class ServerEventHandler {
     }
 
     public static void onServerStop(MinecraftServer server) {
-        thread.destroy();
+        if (thread != null) {
+            thread.destroy();
+            thread = null;
+        }
     }
 
     public static void onServerTick(MinecraftServer server) {
@@ -77,66 +81,69 @@ public final class ServerEventHandler {
         }
     }
 
-    public static void onStartLevelTick(Level level) {
-        if (!ClientUtil.isPaused()) {
+    public static void onStartLevelTick(World level) {
+        if (!ClientUtils.isPaused()) {
             MinecraftSpace.get(level).step();
         }
     }
 
-    public static void onLevelLoad(MinecraftServer server, ServerLevel level) {
-        final var space = new MinecraftSpace(thread, level);
-        ((SpaceStorage) level).setSpace(space);
+    public static void onLevelLoad(MinecraftServer server, WorldServer world) {
+        final var space = new MinecraftSpace(thread, world);
+        ((SpaceStorage) world).setSpace(space);
         PhysicsSpaceEvents.INIT.invoke(space);
     }
 
     public static void onElementAddedToSpace(MinecraftSpace space, ElementRigidBody rigidBody) {
         if (rigidBody instanceof EntityRigidBody entityBody) {
-            final var pos = entityBody.getElement().cast().position();
+            final var pos = entityBody.getElement().cast().getPositionVector();
             entityBody.setPhysicsLocation(Convert.toBullet(pos));
         }
     }
 
     public static void onEntityLoad(Entity entity) {
-        if (EntityPhysicsElement.is(entity) && !PlayerUtil.tracking(entity).isEmpty()) {
-            var space = MinecraftSpace.get(entity.level);
-            space.getWorkerThread().execute(() -> space.addCollisionObject(EntityPhysicsElement.get(entity).getRigidBody()));
+        if (EntityPhysicsElement.is(entity) && !PlayerUtils.tracking(entity).isEmpty()) {
+            var space = MinecraftSpace.get(entity.world);
+            space.getWorkerThread().execute(() -> space.addCollisionObject(
+                    Preconditions.checkNotNull(EntityPhysicsElement.get(entity).getRigidBody())));
         }
     }
 
-    public static void onStartTrackingEntity(Entity entity, ServerPlayer player) {
+    public static void onStartTrackingEntity(Entity entity, EntityPlayerMP player) {
         if (EntityPhysicsElement.is(entity)) {
-            var space = MinecraftSpace.get(entity.level);
-            space.getWorkerThread().execute(() -> space.addCollisionObject(EntityPhysicsElement.get(entity).getRigidBody()));
+            var space = MinecraftSpace.get(entity.world);
+            space.getWorkerThread().execute(() -> space.addCollisionObject(
+                    Preconditions.checkNotNull(EntityPhysicsElement.get(entity).getRigidBody())));
         }
     }
 
-    public static void onStopTrackingEntity(Entity entity, ServerPlayer player) {
-        if (EntityPhysicsElement.is(entity) && PlayerUtil.tracking(entity).isEmpty()) {
-            var space = MinecraftSpace.get(entity.level);
-            space.getWorkerThread().execute(() -> space.removeCollisionObject(EntityPhysicsElement.get(entity).getRigidBody()));
+    public static void onStopTrackingEntity(Entity entity, EntityPlayerMP player) {
+        if (EntityPhysicsElement.is(entity) && PlayerUtils.tracking(entity).isEmpty()) {
+            var space = MinecraftSpace.get(entity.world);
+            space.getWorkerThread().execute(() -> space.removeCollisionObject(
+                    Preconditions.checkNotNull(EntityPhysicsElement.get(entity).getRigidBody())));
         }
     }
 
-    public static void onEntityStartLevelTick(Level level) {
+    public static void onEntityStartLevelTick(World level) {
         var space = MinecraftSpace.get(level);
         EntityCollisionGenerator.step(space);
 
         for (var rigidBody : space.getRigidBodiesByClass(EntityRigidBody.class)) {
             if (rigidBody.isActive()) {
-                /* Movement */
+                // movement
                 if (rigidBody.isPositionDirty()) {
                     EntityNetworking.sendMovement(rigidBody);
                 }
 
-                /* Properties */
+                // properties
                 if (rigidBody.arePropertiesDirty()) {
                     EntityNetworking.sendProperties(rigidBody);
                 }
             }
 
-            /* Set entity position */
+            // set entity position
             var location = rigidBody.getFrame().getLocation(new Vector3f(), 1.0f);
-            rigidBody.getElement().cast().absMoveTo(location.x, location.y, location.z);
+            rigidBody.getElement().cast().setPosition(location.x, location.y, location.z);
         }
     }
 
@@ -148,11 +155,12 @@ public final class ServerEventHandler {
         var linearVelocity = Convert.toBullet(VectorHelper.fromBuffer(buf));
         var angularVelocity = Convert.toBullet(VectorHelper.fromBuffer(buf));
         var player = context.player();
-        var level = player.level;
-        var entity = level.getEntity(entityId);
+        var level = player.world;
+        var entity = level.getEntityByID(entityId);
 
         if (EntityPhysicsElement.is(entity)) {
             var rigidBody = EntityPhysicsElement.get(entity).getRigidBody();
+            Preconditions.checkNotNull(rigidBody);
 
             if (player.equals(rigidBody.getPriorityPlayer())) {
                 PhysicsThread.get(level).execute(() -> {

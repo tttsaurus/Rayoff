@@ -1,6 +1,5 @@
-package com.tttsaurus.rayoff.mixin.hei;
+package com.tttsaurus.rayoff.mixin.mod.hei;
 
-import com.tttsaurus.rayoff.Rayoff;
 import mezz.jei.JustEnoughItems;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,6 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class JustEnoughItemsMixin {
     @Inject(method = "preInit", at = @At("HEAD"))
     public void print(FMLPreInitializationEvent event, CallbackInfo ci) {
-        Rayoff.LOGGER.info("Hello world");
+
     }
 }

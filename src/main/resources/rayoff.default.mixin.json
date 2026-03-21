@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "package": "com.tttsaurus.rayoff.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "target": "@env(DEFAULT)",
+  "client": [
+    "client.EntityRenderDispatcherMixin",
+    "client.KeyboardMixin",
+    "client.LevelRendererMixin",
+    "toolbox.client.MinecraftMixin",
+    "toolbox.client.NetHandlerPlayClientMixin",
+    "toolbox.client.RenderGlobalMixin",
+    "toolbox.client.WorldClientMixin"
+  ],
+  "mixins": [
+    "common.LevelMixin",
+    "common.entity.EntityMixin",
+    "common.entity.EntityTrackerEntryMixin",
+    "common.entity.ExplosionMixin"
+  ],
+  "server": [],
+  "setSourceFile": true,
+  "minVersion": "0.8.7"
+}

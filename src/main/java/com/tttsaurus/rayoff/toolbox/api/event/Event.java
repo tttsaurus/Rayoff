@@ -2,6 +2,7 @@ package com.tttsaurus.rayoff.toolbox.api.event;
 
 import com.tttsaurus.rayoff.toolbox.impl.event.EventImpl;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @param <T> T must be a functional interface that only has one method
@@ -16,5 +17,5 @@ public interface Event<T> {
     }
 
     void register(@NonNull T t);
-    void invoke(@NonNull Object @NonNull ... params);
+    void invoke(@Nullable Object @NonNull ... params);
 }
